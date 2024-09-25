@@ -144,8 +144,8 @@ fn main() {
         [0.6, 0.3],
     );
 
-    let grass_texture = Texture::load_from_file("target/release/grass.png");
-    let stone_texture = Texture::load_from_file("target/release/stone.png");
+    let grass_texture = Texture::load_from_file("grass.png");
+    let stone_texture = Texture::load_from_file("stone.png");
 
     let objects = [
         Object::Cube(Cube {
