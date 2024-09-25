@@ -1,0 +1,11 @@
+C:\Users\usuario\Desktop\Graficas\Proyecto3\Proyecto3-Raytracing\Raytracing\target\debug\deps\libgif-ba4b9132f45a092f.rmeta: C:\Users\usuario\.cargo\registry\src\index.crates.io-6f17d22bba15001f\gif-0.11.4\src\lib.rs C:\Users\usuario\.cargo\registry\src\index.crates.io-6f17d22bba15001f\gif-0.11.4\src\traits.rs C:\Users\usuario\.cargo\registry\src\index.crates.io-6f17d22bba15001f\gif-0.11.4\src\common.rs C:\Users\usuario\.cargo\registry\src\index.crates.io-6f17d22bba15001f\gif-0.11.4\src\reader\mod.rs C:\Users\usuario\.cargo\registry\src\index.crates.io-6f17d22bba15001f\gif-0.11.4\src\reader\decoder.rs C:\Users\usuario\.cargo\registry\src\index.crates.io-6f17d22bba15001f\gif-0.11.4\src\encoder.rs C:\Users\usuario\.cargo\registry\src\index.crates.io-6f17d22bba15001f\gif-0.11.4\src\../README.md
+
+C:\Users\usuario\Desktop\Graficas\Proyecto3\Proyecto3-Raytracing\Raytracing\target\debug\deps\gif-ba4b9132f45a092f.d: C:\Users\usuario\.cargo\registry\src\index.crates.io-6f17d22bba15001f\gif-0.11.4\src\lib.rs C:\Users\usuario\.cargo\registry\src\index.crates.io-6f17d22bba15001f\gif-0.11.4\src\traits.rs C:\Users\usuario\.cargo\registry\src\index.crates.io-6f17d22bba15001f\gif-0.11.4\src\common.rs C:\Users\usuario\.cargo\registry\src\index.crates.io-6f17d22bba15001f\gif-0.11.4\src\reader\mod.rs C:\Users\usuario\.cargo\registry\src\index.crates.io-6f17d22bba15001f\gif-0.11.4\src\reader\decoder.rs C:\Users\usuario\.cargo\registry\src\index.crates.io-6f17d22bba15001f\gif-0.11.4\src\encoder.rs C:\Users\usuario\.cargo\registry\src\index.crates.io-6f17d22bba15001f\gif-0.11.4\src\../README.md
+
+C:\Users\usuario\.cargo\registry\src\index.crates.io-6f17d22bba15001f\gif-0.11.4\src\lib.rs:
+C:\Users\usuario\.cargo\registry\src\index.crates.io-6f17d22bba15001f\gif-0.11.4\src\traits.rs:
+C:\Users\usuario\.cargo\registry\src\index.crates.io-6f17d22bba15001f\gif-0.11.4\src\common.rs:
+C:\Users\usuario\.cargo\registry\src\index.crates.io-6f17d22bba15001f\gif-0.11.4\src\reader\mod.rs:
+C:\Users\usuario\.cargo\registry\src\index.crates.io-6f17d22bba15001f\gif-0.11.4\src\reader\decoder.rs:
+C:\Users\usuario\.cargo\registry\src\index.crates.io-6f17d22bba15001f\gif-0.11.4\src\encoder.rs:
+C:\Users\usuario\.cargo\registry\src\index.crates.io-6f17d22bba15001f\gif-0.11.4\src\../README.md:

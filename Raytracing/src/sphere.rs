@@ -26,10 +26,10 @@ impl RayIntersect for Sphere {
                 let normal = (point - self.center).normalize();
                 let distance = t;
 
-                return Intersect::new(point, normal, distance, self.material);
+                return Intersect::new(point, normal, distance, self.material.clone());
             }
         }
 
         Intersect::empty()
     }
-}
+}   

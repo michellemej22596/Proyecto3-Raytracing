@@ -6,7 +6,8 @@ mod color;
 mod camera;
 mod light;
 mod material;
-mod cube;  // Assuming we add cube.rs module to handle cube-specific logic
+mod cube;  // New cube module
+mod texture; // New texture module
 
 use minifb::{ Window, WindowOptions, Key };
 use nalgebra_glm::{Vec3, normalize};
@@ -21,12 +22,13 @@ use crate::framebuffer::Framebuffer;
 use crate::camera::Camera;
 use crate::light::Light;
 use crate::material::Material;
+use crate::texture::Texture;  // New texture import
 
 fn reflect(incident: &Vec3, normal: &Vec3) -> Vec3 {
     incident - 2.0 * incident.dot(normal) * normal
 }
 
-enum Object {
+pub enum Object {
     Sphere(Sphere),
     Cube(Cube),
 }
@@ -43,31 +45,49 @@ impl RayIntersect for Object {
 pub fn cast_ray(ray_origin: &Vec3, ray_direction: &Vec3, objects: &[Object], light: &Light) -> Color {
     let mut intersect = Intersect::empty();
     let mut zbuffer = f32::INFINITY;
+    let mut hit_object: Option<&Object> = None; // Referencia al objeto intersectado
 
     for object in objects {
         let tmp = object.ray_intersect(ray_origin, ray_direction);
         if tmp.is_intersecting && tmp.distance < zbuffer {
-            zbuffer = tmp.distance;  // Fixed zbuffer assignment
+            zbuffer = tmp.distance;
             intersect = tmp;
+            hit_object = Some(object);  // Guarda referencia al objeto que fue intersectado
         }
     }
 
     if !intersect.is_intersecting {
-        return Color::new(4, 12, 36); // Background color
+        return Color::new(4, 12, 36); // Color de fondo
     }
-    
+
     let light_dir = (light.position - intersect.point).normalize();
     let view_dir = (ray_origin - intersect.point).normalize();
     let reflect_dir = reflect(&-light_dir, &intersect.normal);
 
     let diffuse_intensity = intersect.normal.dot(&light_dir).max(0.0).min(1.0);
-    let diffuse = intersect.material.diffuse * intersect.material.albedo[0] * diffuse_intensity * light.intensity;
+    let mut diffuse = intersect.material.diffuse * intersect.material.albedo[0] * diffuse_intensity * light.intensity;
+
+    if let Some(object) = hit_object {
+        match object {
+            Object::Cube(cube) => {
+                if let Some(texture) = intersect.material.texture {
+                    let (u, v) = cube.get_uv(&intersect.point);
+                    let tex_color = texture.get_color(u, v);
+                    diffuse = tex_color * intersect.material.albedo[0] * diffuse_intensity * light.intensity;
+                }
+            },
+            Object::Sphere(_) => {
+                // Manejamos esferas aquí si fuera necesario
+            },
+        }
+    }
 
     let specular_intensity = view_dir.dot(&reflect_dir).max(0.0).powf(intersect.material.specular);
     let specular = light.color * intersect.material.albedo[1] * specular_intensity * light.intensity;
 
     diffuse + specular
 }
+
 
 pub fn render(framebuffer: &mut Framebuffer, objects: &[Object], camera: &Camera, light: &Light) {
     let width = framebuffer.width as f32;
@@ -98,14 +118,15 @@ pub fn render(framebuffer: &mut Framebuffer, objects: &[Object], camera: &Camera
 fn main() {
     let window_width = 800;
     let window_height = 600;
-    let framebuffer_width = 800;
-    let framebuffer_height = 600;
+    let framebuffer_width = 400;  // Reducir la resolución
+    let framebuffer_height = 300;  // Reducir la resolución
+    
     let frame_delay = Duration::from_millis(16);
 
     let mut framebuffer = Framebuffer::new(framebuffer_width, framebuffer_height);
 
     let mut window = Window::new(
-        "EEGSA",
+        "Mini Minecraft",
         window_width,
         window_height,
         WindowOptions::default(),
@@ -123,21 +144,24 @@ fn main() {
         [0.6, 0.3],
     );
 
+    let grass_texture = Texture::load_from_file("target/release/grass.png");
+    let stone_texture = Texture::load_from_file("target/release/stone.png");
+
     let objects = [
-        Object::Sphere(Sphere {
-            center: Vec3::new(0.0, 0.0, -4.0),
-            radius: 1.0,
-            material: ivory,
+        Object::Cube(Cube {
+            min: Vec3::new(-2.0, -1.0, -4.0),
+            max: Vec3::new(-1.0, 1.0, -3.0),
+            material: Material::with_texture(Color::new(255, 255, 255), 1.0, [0.7, 0.3], stone_texture),
+        }),
+        Object::Cube(Cube {
+            min: Vec3::new(0.0, -1.0, -4.0),
+            max: Vec3::new(1.0, 1.0, -3.0),
+            material: Material::with_texture(Color::new(255, 255, 255), 1.0, [0.7, 0.3], grass_texture),
         }),
         Object::Sphere(Sphere {
             center: Vec3::new(1.5, 0.0, -5.0),
             radius: 0.5,
             material: rubber,
-        }),
-        Object::Cube(Cube {
-            min: Vec3::new(-1.0, -1.0, -6.0),
-            max: Vec3::new(1.0, 1.0, -4.0),
-            material: ivory,
         }),
     ];
 

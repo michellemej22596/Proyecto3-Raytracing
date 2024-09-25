@@ -3,8 +3,7 @@ use nalgebra_glm::Vec3;
 use crate::material::Material;
 use crate::cube::Cube;  // Import the Cube
 
-#[derive(Debug, Clone, Copy)]
-#[allow(dead_code)]
+#[derive(Debug, Clone)] 
 pub struct Intersect {
     pub point: Vec3,
     pub normal: Vec3,
@@ -12,6 +11,7 @@ pub struct Intersect {
     pub is_intersecting: bool,
     pub material: Material,
 }
+
 
 impl Intersect {
     pub fn new(point: Vec3, normal: Vec3, distance: f32, material: Material) -> Self {
@@ -57,10 +57,11 @@ impl RayIntersect for Cube {
 
 
         if t_near < t_far && t_far > 0.0 {
-            let point = ray_origin + ray_direction * t_near;
-            let normal = self.get_normal(&point); // Normal basada en la cara del cubo
-            return Intersect::new(point, normal, t_near, self.material);
+            let point = ray_origin + ray_direction * t_near;  // Asegura que point es un Vec3
+            let normal = self.get_normal(&point);  // Calcula la normal
+            return Intersect::new(point, normal, t_near, self.material.clone());  // Clona el material
         }
+        
 
         Intersect::empty()
     }
