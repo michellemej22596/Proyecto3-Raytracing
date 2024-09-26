@@ -42,45 +42,42 @@ impl RayIntersect for Object {
     }
 }
 
-pub fn cast_ray(ray_origin: &Vec3, ray_direction: &Vec3, objects: &[Object], light: &Light) -> Color {
+fn cast_ray(ray_origin: &Vec3, ray_direction: &Vec3, objects: &[Object], light: &Light) -> Color {
     let mut intersect = Intersect::empty();
     let mut zbuffer = f32::INFINITY;
-    let mut hit_object: Option<&Object> = None; // Referencia al objeto intersectado
+    let mut hit_object: Option<&Object> = None;
 
+    // Recorremos todos los objetos
     for object in objects {
         let tmp = object.ray_intersect(ray_origin, ray_direction);
         if tmp.is_intersecting && tmp.distance < zbuffer {
             zbuffer = tmp.distance;
             intersect = tmp;
-            hit_object = Some(object);  // Guarda referencia al objeto que fue intersectado
+            hit_object = Some(object);
         }
     }
 
+    // Si no hay intersección, devolvemos el color de fondo
     if !intersect.is_intersecting {
-        return Color::new(4, 12, 36); // Color de fondo
+        return Color::new(4, 12, 36);  // Color del fondo
     }
 
+    // Verificar si el material tiene textura
+    if let Some(texture) = intersect.material.texture {
+        if let Some(Object::Cube(cube)) = hit_object {
+            let (u, v) = cube.get_uv(&intersect.point);
+            return texture.get_color(u, v);
+        }
+    }
+    
+
+    // Continuamos con los cálculos de iluminación para otros objetos
     let light_dir = (light.position - intersect.point).normalize();
     let view_dir = (ray_origin - intersect.point).normalize();
     let reflect_dir = reflect(&-light_dir, &intersect.normal);
 
     let diffuse_intensity = intersect.normal.dot(&light_dir).max(0.0).min(1.0);
-    let mut diffuse = intersect.material.diffuse * intersect.material.albedo[0] * diffuse_intensity * light.intensity;
-
-    if let Some(object) = hit_object {
-        match object {
-            Object::Cube(cube) => {
-                if let Some(texture) = intersect.material.texture {
-                    let (u, v) = cube.get_uv(&intersect.point);
-                    let tex_color = texture.get_color(u, v);
-                    diffuse = tex_color * intersect.material.albedo[0] * diffuse_intensity * light.intensity;
-                }
-            },
-            Object::Sphere(_) => {
-                // Manejamos esferas aquí si fuera necesario
-            },
-        }
-    }
+    let diffuse = intersect.material.diffuse * intersect.material.albedo[0] * diffuse_intensity * light.intensity;
 
     let specular_intensity = view_dir.dot(&reflect_dir).max(0.0).powf(intersect.material.specular);
     let specular = light.color * intersect.material.albedo[1] * specular_intensity * light.intensity;
@@ -89,11 +86,12 @@ pub fn cast_ray(ray_origin: &Vec3, ray_direction: &Vec3, objects: &[Object], lig
 }
 
 
+
 pub fn render(framebuffer: &mut Framebuffer, objects: &[Object], camera: &Camera, light: &Light) {
     let width = framebuffer.width as f32;
     let height = framebuffer.height as f32;
     let aspect_ratio = width / height;
-    let fov = PI / 3.0;
+    let fov = PI / 3.0;  // Cambia el FOV para ampliar la vista
     let perspective_scale = (fov * 0.5).tan();
 
     for y in 0..framebuffer.height {
@@ -118,8 +116,8 @@ pub fn render(framebuffer: &mut Framebuffer, objects: &[Object], camera: &Camera
 fn main() {
     let window_width = 800;
     let window_height = 600;
-    let framebuffer_width = 400;  // Reducir la resolución
-    let framebuffer_height = 300;  // Reducir la resolución
+    let framebuffer_width = 200;  // Reducir la resolución
+    let framebuffer_height = 150;  // Reducir la resolución
     
     let frame_delay = Duration::from_millis(16);
 
@@ -138,37 +136,44 @@ fn main() {
         [0.9, 0.1],
     );
 
-    let ivory = Material::new(
-        Color::new(100, 100, 80),
-        50.0,
-        [0.6, 0.3],
-    );
+    // Carga las texturas
+    let grass_texture = Texture::load_from_file("src/grass.png");
+    let stone_texture = Texture::load_from_file("src/stone.png");
+    let wood_texture = Texture::load_from_file("src/wood.png"); // Carga la textura de la madera
+    let skybox_texture = Texture::load_from_file("src/skybox.png");  // Carga la textura del cielo
 
-    let grass_texture = Texture::load_from_file("grass.png");
-    let stone_texture = Texture::load_from_file("stone.png");
+    // Skybox
+    let skybox = Object::Cube(Cube {
+        min: Vec3::new(-50.0, -50.0, -50.0),
+        max: Vec3::new(50.0, 50.0, 50.0),
+        material: Material::with_texture(Color::new(135, 206, 235), 1.0, [0.0, 0.0], skybox_texture),
+        is_skybox: true,  // Marcamos este cubo como el skybox
+    });
 
-    let objects = [
-        Object::Cube(Cube {
-            min: Vec3::new(-2.0, -1.0, -4.0),
-            max: Vec3::new(-1.0, 1.0, -3.0),
-            material: Material::with_texture(Color::new(255, 255, 255), 1.0, [0.7, 0.3], stone_texture),
-        }),
-        Object::Cube(Cube {
-            min: Vec3::new(0.0, -1.0, -4.0),
-            max: Vec3::new(1.0, 1.0, -3.0),
-            material: Material::with_texture(Color::new(255, 255, 255), 1.0, [0.7, 0.3], grass_texture),
-        }),
-        Object::Sphere(Sphere {
-            center: Vec3::new(1.5, 0.0, -5.0),
-            radius: 0.5,
-            material: rubber,
-        }),
-    ];
+    // Crea los árboles
+    let mut objects: Vec<Object> = Vec::new();
+    objects.extend(create_tree(-1.5, -4.0, 3.0, 1.0, &wood_texture, &grass_texture));  // Árbol 1
+    objects.extend(create_tree(1.5, -5.0, 4.0, 1.5, &wood_texture, &grass_texture));  // Árbol 2
+    objects.extend(create_tree(0.0, -6.0, 2.0, 1.0, &wood_texture, &grass_texture));  // Árbol 3
+
+    // Otros objetos en la escena
+    objects.push(Object::Cube(Cube {
+        min: Vec3::new(-2.0, -1.0, -4.0),
+        max: Vec3::new(-1.0, 1.0, -3.0),
+        material: Material::with_texture(Color::new(255, 255, 255), 1.0, [0.7, 0.3], stone_texture),
+        is_skybox: false,
+    }));
+
+    objects.push(Object::Sphere(Sphere {
+        center: Vec3::new(1.5, 0.0, -5.0),
+        radius: 0.5,
+        material: rubber,
+    }));
 
     let mut camera = Camera::new(
-        Vec3::new(0.0, 0.0, 5.0),
-        Vec3::new(0.0, 0.0, 0.0),
-        Vec3::new(0.0, 1.0, 0.0),
+        Vec3::new(0.0, 0.0, 5.0),  // Posición de la cámara
+        Vec3::new(0.0, 0.0, 0.0),  // Hacia dónde mira la cámara
+        Vec3::new(0.0, 1.0, 0.0),  // Arriba
     );
 
     let light = Light::new(
@@ -180,7 +185,6 @@ fn main() {
     let rotation_speed = PI / 10.0;
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
-
         if window.is_key_down(Key::Left) {
             camera.orbit(rotation_speed, 0.0); 
         }
@@ -206,3 +210,29 @@ fn main() {
         std::thread::sleep(frame_delay);
     }
 }
+
+fn create_tree(base_x: f32, base_z: f32, trunk_height: f32, leaves_size: f32, wood_texture: &Texture, grass_texture: &Texture) -> Vec<Object> {
+    let mut tree_objects = Vec::new();
+    
+    // Tronco (cubos verticales)
+    for i in 0..(trunk_height as i32) {
+        tree_objects.push(Object::Cube(Cube {
+            min: Vec3::new(base_x - 0.25, i as f32 - 1.0, base_z - 0.25),
+            max: Vec3::new(base_x + 0.25, (i as f32) + 0.25, base_z + 0.25),
+            material: Material::with_texture(Color::new(139, 69, 19), 1.0, [0.7, 0.3], wood_texture.clone()),  // Clonamos la textura
+            is_skybox: false,
+        }));
+    }
+
+    // Hojas (cubos grandes encima del tronco)
+    let leaves_base_y = trunk_height - 0.5;  // Altura donde empiezan las hojas
+    tree_objects.push(Object::Cube(Cube {
+        min: Vec3::new(base_x - leaves_size, leaves_base_y, base_z - leaves_size),
+        max: Vec3::new(base_x + leaves_size, leaves_base_y + leaves_size, base_z + leaves_size),
+        material: Material::with_texture(Color::new(34, 139, 34), 1.0, [0.7, 0.3], grass_texture.clone()),  // Clonamos la textura
+        is_skybox: false,
+    }));
+
+    tree_objects
+}
+
