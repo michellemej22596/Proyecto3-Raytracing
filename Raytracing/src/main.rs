@@ -42,48 +42,45 @@ impl RayIntersect for Object {
     }
 }
 
-fn cast_ray(ray_origin: &Vec3, ray_direction: &Vec3, objects: &[Object], light: &Light) -> Color {
+pub fn cast_ray(ray_origin: &Vec3, ray_direction: &Vec3, objects: &[Object], light: &Light) -> Color {
     let mut intersect = Intersect::empty();
     let mut zbuffer = f32::INFINITY;
-    let mut hit_object: Option<&Object> = None;
 
-    // Recorremos todos los objetos
     for object in objects {
         let tmp = object.ray_intersect(ray_origin, ray_direction);
         if tmp.is_intersecting && tmp.distance < zbuffer {
             zbuffer = tmp.distance;
             intersect = tmp;
-            hit_object = Some(object);
         }
     }
 
-    // Si no hay intersección, devolvemos el color de fondo
     if !intersect.is_intersecting {
-        return Color::new(4, 12, 36);  // Color del fondo
+        return Color::new(4, 12, 36);  // Fondo
     }
 
-    // Verificar si el material tiene textura
-    if let Some(texture) = intersect.material.texture {
-        if let Some(Object::Cube(cube)) = hit_object {
-            let (u, v) = cube.get_uv(&intersect.point);
-            return texture.get_color(u, v);
-        }
-    }
-    
-
-    // Continuamos con los cálculos de iluminación para otros objetos
     let light_dir = (light.position - intersect.point).normalize();
     let view_dir = (ray_origin - intersect.point).normalize();
     let reflect_dir = reflect(&-light_dir, &intersect.normal);
 
+    // Diffuse y Specular
     let diffuse_intensity = intersect.normal.dot(&light_dir).max(0.0).min(1.0);
     let diffuse = intersect.material.diffuse * intersect.material.albedo[0] * diffuse_intensity * light.intensity;
-
     let specular_intensity = view_dir.dot(&reflect_dir).max(0.0).powf(intersect.material.specular);
     let specular = light.color * intersect.material.albedo[1] * specular_intensity * light.intensity;
 
-    diffuse + specular
+    // Fresnel para reflectividad
+    let cos_theta = intersect.normal.dot(&view_dir).abs();
+    let fresnel_factor = fresnel_schlick(cos_theta, intersect.material.reflectivity);
+
+    // Transparencia y reflectividad ajustados con Fresnel
+    let reflectivity = intersect.material.reflectivity * fresnel_factor;
+    let transparency = intersect.material.transparency * (1.0 - fresnel_factor);
+
+    // Combina diffuse, specular y reflectividad con Fresnel
+    let final_color = diffuse * (1.0 - reflectivity) + specular * reflectivity;
+    final_color
 }
+
 
 
 
@@ -91,7 +88,7 @@ pub fn render(framebuffer: &mut Framebuffer, objects: &[Object], camera: &Camera
     let width = framebuffer.width as f32;
     let height = framebuffer.height as f32;
     let aspect_ratio = width / height;
-    let fov = PI / 3.0;  // Cambia el FOV para ampliar la vista
+    let fov = PI / 2.0;  // Cambia el FOV para ampliar la vista
     let perspective_scale = (fov * 0.5).tan();
 
     for y in 0..framebuffer.height {
@@ -134,6 +131,8 @@ fn main() {
         Color::new(80, 0, 0),
         1.0,
         [0.9, 0.1],
+        0.9,
+        0.5,
     );
 
     // Carga las texturas
@@ -146,7 +145,7 @@ fn main() {
     let skybox = Object::Cube(Cube {
         min: Vec3::new(-50.0, -50.0, -50.0),
         max: Vec3::new(50.0, 50.0, 50.0),
-        material: Material::with_texture(Color::new(135, 206, 235), 1.0, [0.0, 0.0], skybox_texture),
+        material: Material::with_texture(Color::new(135, 206, 235), 1.0, [0.0, 0.0], skybox_texture, 0.0, 0.0),
         is_skybox: true,  // Marcamos este cubo como el skybox
     });
 
@@ -160,7 +159,7 @@ fn main() {
     objects.push(Object::Cube(Cube {
         min: Vec3::new(-2.0, -1.0, -4.0),
         max: Vec3::new(-1.0, 1.0, -3.0),
-        material: Material::with_texture(Color::new(255, 255, 255), 1.0, [0.7, 0.3], stone_texture),
+        material: Material::with_texture(Color::new(255, 255, 255), 1.0, [0.7, 0.3], stone_texture, 0.3, 0.0),
         is_skybox: false,
     }));
 
@@ -177,10 +176,11 @@ fn main() {
     );
 
     let light = Light::new(
-        Vec3::new(100.0, 100.0, 10.0),
-        Color::new(255, 255, 255),
-        1.0
+        Vec3::new(100.0, 100.0, 10.0),  // Ajusta la posición si es necesario
+        Color::new(255, 255, 255),  // Mantén el color blanco
+        3.0,  // Aumenta la intensidad de 1.0 a 3.0 o más para iluminar más la escena
     );
+    
 
     let rotation_speed = PI / 10.0;
 
@@ -219,7 +219,7 @@ fn create_tree(base_x: f32, base_z: f32, trunk_height: f32, leaves_size: f32, wo
         tree_objects.push(Object::Cube(Cube {
             min: Vec3::new(base_x - 0.25, i as f32 - 1.0, base_z - 0.25),
             max: Vec3::new(base_x + 0.25, (i as f32) + 0.25, base_z + 0.25),
-            material: Material::with_texture(Color::new(139, 69, 19), 1.0, [0.7, 0.3], wood_texture.clone()),  // Clonamos la textura
+            material: Material::with_texture(Color::new(139, 69, 19), 1.0, [0.7, 0.3], wood_texture.clone(), 0.1, 0.0),  // Clonamos la textura
             is_skybox: false,
         }));
     }
@@ -229,10 +229,17 @@ fn create_tree(base_x: f32, base_z: f32, trunk_height: f32, leaves_size: f32, wo
     tree_objects.push(Object::Cube(Cube {
         min: Vec3::new(base_x - leaves_size, leaves_base_y, base_z - leaves_size),
         max: Vec3::new(base_x + leaves_size, leaves_base_y + leaves_size, base_z + leaves_size),
-        material: Material::with_texture(Color::new(34, 139, 34), 1.0, [0.7, 0.3], grass_texture.clone()),  // Clonamos la textura
+        material: Material::with_texture(Color::new(34, 139, 34), 1.0, [0.7, 0.3], grass_texture.clone(), 0.1, 0.0), // Clonamos la textura
         is_skybox: false,
     }));
 
     tree_objects
 }
+
+fn fresnel_schlick(cos_theta: f32, reflectivity: f32) -> f32 {
+    let r0 = (1.0 - reflectivity) / (1.0 + reflectivity);
+    let r0 = r0 * r0;
+    r0 + (1.0 - r0) * (1.0 - cos_theta).powf(5.0)
+}
+
 
