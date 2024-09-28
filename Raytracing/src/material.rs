@@ -24,17 +24,18 @@ impl Material {
         }
     }
 
-    // Método para un material con textura
-    pub fn with_texture(diffuse: Color, specular: f32, albedo: [f32; 2], texture: Texture, reflectivity: f32, transparency: f32) -> Self {
+        // Cambia el método para aceptar una referencia en lugar de tomar la propiedad
+    pub fn with_texture(diffuse: Color, specular: f32, albedo: [f32; 2], texture: &Texture, reflectivity: f32, transparency: f32) -> Self {
         Material {
             diffuse,
             specular,
             albedo,
-            texture: Some(texture), // Agregamos la textura
-            reflectivity,  // Agregamos reflectividad
-            transparency,  // Agregamos transparencia
+            texture: Some(texture.clone()), // Clonamos solo dentro de la estructura, si es necesario
+            reflectivity,
+            transparency,
         }
     }
+
 
     // Método para un material negro sin reflectividad ni transparencia
     pub fn black() -> Self {
