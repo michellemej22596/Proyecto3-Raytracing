@@ -17,6 +17,8 @@ Atractivo visual - Se utilizan texturas y efectos de iluminación avanzados, com
 
 Performance del raytracer - El proyecto fue optimizado para correr con buena performance, incluyendo un framebuffer de menor resolución para mejorar la velocidad de procesamiento.
 
+Zoom In and Zoom Out
+
 Materiales con texturas - Se han añadido diferentes materiales, cada uno con su propia textura, albedo, especularidad, transparencia y reflectividad. Esto incluye materiales como:
 
 Piedra
@@ -29,6 +31,8 @@ Ciclo de día y noche - Se ha implementado un ciclo de iluminación que permite 
 Materiales emisivos - Algunos objetos como la esfera pueden representar una fuente de luz emisiva, afectando la iluminación de la escena.
 
 Texturas con Normal Map
+
+Calculo de Fresnel
 
 Estructura del Código
 El proyecto está dividido en los siguientes módulos:
