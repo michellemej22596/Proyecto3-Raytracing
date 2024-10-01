@@ -6,10 +6,12 @@ MINI MINECRAFT
 
 Este proyecto implementa un motor de raytracing en Rust que simula una escena estilo Minecraft. El motor incluye características como manejo de texturas, múltiples fuentes de luz, efectos de fresnel, y un ciclo de día y noche. A lo largo del proyecto se han implementado varios objetos y elementos para hacer la simulación lo más atractiva posible.
 
+![Minecraft](/Proyecto3/Proyecto3-Raytracing/Video.gif)
+
 Requisitos del Proyecto
 El proyecto está diseñado para cumplir con los siguientes requisitos:
 
-Complejidad de la escena - Se han implementado varios árboles de bloques con troncos y hojas, además de cubos y esferas que simulan materiales como piedra, grama y madera.
+Complejidad de la escena - Se han implementado varios árboles de bloques con troncos y hojas, además de cubos y esferas que simulan materiales como piedra, grama el sol y madera.
 
 Atractivo visual - Se utilizan texturas y efectos de iluminación avanzados, como el fresnel y materiales emisivos, para mejorar el realismo y la estética de la escena.
 
@@ -25,6 +27,8 @@ Skybox
 Ciclo de día y noche - Se ha implementado un ciclo de iluminación que permite cambiar la hora del día (día, tarde, noche) presionando teclas específicas. Este ciclo cambia tanto la posición como el color de las luces.
 
 Materiales emisivos - Algunos objetos como la esfera pueden representar una fuente de luz emisiva, afectando la iluminación de la escena.
+
+Texturas con Normal Map
 
 Estructura del Código
 El proyecto está dividido en los siguientes módulos:
@@ -55,12 +59,6 @@ Teclas de dirección - Orbitan la cámara alrededor de la escena.
 Tecla D - Cambia la iluminación a modo "Día".
 Tecla T - Cambia la iluminación a modo "Tarde".
 Tecla N - Cambia la iluminación a modo "Noche".
-
-Futuras Mejoras
-Finalizar la implementación del skybox.
-Mejorar las texturas de los bloques y optimizar el renderizado.
-Implementar soporte para animación de texturas como agua o fuego.
-Añadir más objetos y detalles a la escena.
 
 Licencia
 Este proyecto está bajo la licencia MIT. Puedes modificar y distribuir el código libremente, siempre y cuando des crédito a los autores originales.

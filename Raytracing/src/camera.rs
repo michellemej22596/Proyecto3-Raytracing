@@ -17,6 +17,19 @@ impl Camera {
         }
     }
 
+    // Función para acercar la cámara
+    pub fn zoom_in(&mut self, amount: f32) {
+        let direction = (self.center - self.eye).normalize();
+        self.eye += direction * amount;  // Mover la cámara hacia el punto al que está mirando
+    }
+
+    // Función para alejar la cámara
+    pub fn zoom_out(&mut self, amount: f32) {
+        let direction = (self.center - self.eye).normalize();
+        self.eye -= direction * amount;  // Mover la cámara alejándose del punto al que está mirando
+    }
+
+    
     pub fn base_change(&self, vector: &Vec3) -> Vec3 {
         let forward = (self.center - self.eye).normalize();
         let right = forward.cross(&self.up).normalize();

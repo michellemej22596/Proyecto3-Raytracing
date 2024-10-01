@@ -217,54 +217,63 @@ fn main() {
     let mut time_of_day = 0;  // 0 = Día, 1 = Tarde, 2 = Noche
     let rotation_speed = PI / 10.0;
 
-    while window.is_open() && !window.is_key_down(Key::Escape) {
-        if window.is_key_down(Key::Left) {
-            camera.orbit(rotation_speed, 0.0);
-        }
+    let zoom_speed = 0.5;  // Velocidad de zoom
 
-        if window.is_key_down(Key::Right) {
-
-            camera.orbit(-rotation_speed, 0.0);
-        }
-
-        if window.is_key_down(Key::Up) {
-            camera.orbit(0.0, -rotation_speed);
-        }
-
-        if window.is_key_down(Key::Down) {
-            camera.orbit(0.0, rotation_speed);
-        }
-
-        // Ciclo de día y noche controlado por teclas
-        if window.is_key_down(Key::D) {
-            time_of_day = (time_of_day + 1) % 3;  // Cambia entre Día, Tarde y Noche
-        }
-
-        // Cambios en la iluminación según la hora del día
-        match time_of_day {
-            0 => {
-                lights[0].color = Color::new(255, 255, 255);  // Luz blanca para el día
-                lights[0].intensity = 3.0;
-            },
-            1 => {
-                lights[0].color = Color::new(255, 165, 0);  // Luz anaranjada para la tarde
-                lights[0].intensity = 2.0;
-            },
-            2 => {
-                lights[0].color = Color::new(0, 0, 139);  // Luz azul para la noche
-                lights[0].intensity = 1.0;
-            },
-            _ => {}
-        }
-
-        render(&mut framebuffer, &objects, &camera, &lights);
-
-        window
-            .update_with_buffer(&framebuffer.buffer, framebuffer_width, framebuffer_height)
-            .unwrap();
-
-        std::thread::sleep(frame_delay);
+while window.is_open() && !window.is_key_down(Key::Escape) {
+    if window.is_key_down(Key::Left) {
+        camera.orbit(rotation_speed, 0.0);
     }
+
+    if window.is_key_down(Key::Right) {
+        camera.orbit(-rotation_speed, 0.0);
+    }
+
+    if window.is_key_down(Key::Up) {
+        camera.orbit(0.0, -rotation_speed);
+    }
+
+    if window.is_key_down(Key::Down) {
+        camera.orbit(0.0, rotation_speed);
+    }
+
+    // Control de zoom
+    if window.is_key_down(Key::Z) {  // Zoom in (acercar)
+        camera.zoom_in(zoom_speed);
+    }
+    if window.is_key_down(Key::X) {  // Zoom out (alejar)
+        camera.zoom_out(zoom_speed);
+    }
+
+    // Ciclo de día y noche controlado por teclas
+    if window.is_key_down(Key::D) {
+        time_of_day = (time_of_day + 1) % 3;  // Cambia entre Día, Tarde y Noche
+    }
+
+    // Cambios en la iluminación según la hora del día
+    match time_of_day {
+        0 => {
+            lights[0].color = Color::new(255, 255, 255);  // Luz blanca para el día
+            lights[0].intensity = 3.0;
+        },
+        1 => {
+            lights[0].color = Color::new(255, 165, 0);  // Luz anaranjada para la tarde
+            lights[0].intensity = 2.0;
+        },
+        2 => {
+            lights[0].color = Color::new(0, 0, 139);  // Luz azul para la noche
+            lights[0].intensity = 1.0;
+        },
+        _ => {}
+    }
+
+    render(&mut framebuffer, &objects, &camera, &lights);
+
+    window
+        .update_with_buffer(&framebuffer.buffer, framebuffer_width, framebuffer_height)
+        .unwrap();
+
+    std::thread::sleep(frame_delay);
+}
 }
 
 fn create_tree(base_x: f32, base_z: f32, trunk_height: f32, leaves_size: f32, wood_texture: &Texture, grass_texture: &Texture) -> Vec<Object> {
