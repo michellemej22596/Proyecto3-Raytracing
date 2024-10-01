@@ -6,7 +6,7 @@ MINI MINECRAFT
 
 Este proyecto implementa un motor de raytracing en Rust que simula una escena estilo Minecraft. El motor incluye características como manejo de texturas, múltiples fuentes de luz, efectos de fresnel, y un ciclo de día y noche. A lo largo del proyecto se han implementado varios objetos y elementos para hacer la simulación lo más atractiva posible.
 
-![Minecraft](/Proyecto3/Proyecto3-Raytracing/Video.gif)
+![Minecraft](/Video.gif)
 
 Requisitos del Proyecto
 El proyecto está diseñado para cumplir con los siguientes requisitos:
@@ -60,9 +60,9 @@ cargo run --release
 
 Controles
 Teclas de dirección - Orbitan la cámara alrededor de la escena.
-Tecla D - Cambia la iluminación a modo "Día".
-Tecla T - Cambia la iluminación a modo "Tarde".
-Tecla N - Cambia la iluminación a modo "Noche".
+Tecla D - Cambia la iluminación a modo "Día", "Tarde" y "Noche".
+Tecla Z - Se acerca.
+Tecla X - Se aleja.
 
 Licencia
 Este proyecto está bajo la licencia MIT. Puedes modificar y distribuir el código libremente, siempre y cuando des crédito a los autores originales.
